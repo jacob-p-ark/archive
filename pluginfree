@@ -1,0 +1,177 @@
+
+
+
+<template>
+<!--  nProtect Keypad-->
+  <div class="q example-row-column-width q-ma-md">
+    <div>
+      <div>비밀번호 입력</div>
+    </div>
+  </div>
+
+  <nos-component
+    ref="NOS_COMPONENT"
+    :keypad="true"
+    vendor=""
+  >
+    <div>
+      <table>
+        <tr class="py-2">
+          <td class="col-2">비밀번호</td>
+        </tr>
+        <tr class="py-2">
+          <td class="col-4">
+            <q-input
+              outlined
+              type="password"
+              v-model="state.modelValues.E2E_PASS_01"
+              id="password-01"
+              npkencrypt="on"
+              data-keypad-show="div"
+              data-keypad-extend-ui="acntPswd"
+              maxlength="4"
+              data-keypad-type="num"
+              data-keypad-next="__hide__"
+              data-keypad-preview="off"
+              autocomplete="off"
+            />
+          </td>
+        </tr>
+      </table>
+      <table>
+        <tr class="text-center">
+          <td class="col-6">
+            <button @click="doSerialize">암호화값 얻기</button>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </nos-component>
+
+  <div >
+    <q-btn to="/stock/buy" >자동 저장 안할때 SKIP</q-btn>
+    <q-btn to="/auth/accountPwSave" >자동 저장 SKIP</q-btn>
+  </div>
+</template>
+
+<script>
+import NOSComponent from "components/pluginfree/NOSComponent.vue";
+import { sendEncrypt } from 'src/api/nProtect/nProtect';
+import { onMounted, watch, nextTick, reactive, ref } from 'vue';
+import { headerViewStore } from 'stores/HeaderStore';
+import { ModalViewHandle } from 'stores/ModalStore';
+import { useSessionStore } from 'stores/WebSocketStore';
+import { Cookies } from "quasar";
+
+import ModalView from 'components/Modalview.vue';
+import { useRouter } from "vue-router";
+import AlertModal from 'components/modal/AlertModal.vue';
+import { authorize, kill, me, signoff, status, token } from 'src/api/common/sign';
+
+const ModalStore = ModalViewHandle()
+const setSession = useSessionStore();
+const getCookie = !!Cookies.get('passWordSave')
+
+export default {
+  components: {
+    "nos-component": NOSComponent,
+  },
+
+  setup() {
+    const router = useRouter()
+    const state = reactive({
+
+      dynamicFields: false,
+      modelValues: {},
+      decryptDebug: "",
+      NOS_SERIALIZED: "",
+      NOS_INSTANCE: {}
+    });
+
+    const table = (id) => {
+      state.NOS_INSTANCE.table(id)
+        .then((data) => {
+          alert(data);
+        });
+    }
+
+    const replacement = (id) => {
+      state.NOS_INSTANCE.replacement(id)
+        .then((data) => {
+          alert(data);
+        });
+    }
+
+    const encrypt = (id) => {
+      state.NOS_INSTANCE.encrypt(id)
+        .then((data) => {
+          alert(data);
+        });
+    }
+
+    const doSerialize = () => {
+      state.NOS_SERIALIZED = state.NOS_INSTANCE.toJSON();
+
+      //추가 소스코드
+      nextTick(async () => {
+        const serialized = state.NOS_SERIALIZED;
+        const json = JSON.stringify(serialized);
+
+        let params = {
+          p: "q",
+          m: "d",
+          s: json
+        };
+
+        await sendEncrypt(params)
+          .then(response => {
+            if (response.status === 200 && response.data) {
+              console.dir('sendEncrypt');
+              console.dir(response.data.result);
+            }
+          }).catch(err => {
+            console.log('err', err)
+          })
+      });
+    }
+
+    const fn_authorize = () => {
+      let params = {};
+
+      nextTick(async () => {
+      authorize(params).then(response => {
+        if (response.status === 200 && response.data) {
+          //
+        }
+      })
+      })
+    }
+
+    const NOS_COMPONENT = ref(null);
+
+    onMounted(() => {
+      store.isHeader = false;
+      state.NOS_INSTANCE = NOS_COMPONENT;
+      state.NOS_INSTANCE.init();
+    });
+
+    watch(() => state.dynamicFields, (val) => {
+      if(val) {
+        state.NOS_INSTANCE.init();
+      } else {
+        ...
+      }
+    });
+
+    return {
+      state,
+      NOS_COMPONENT,
+      table, ...
+    }
+  }
+}
+
+</script>
+
+<style lang="scss">
+</style>

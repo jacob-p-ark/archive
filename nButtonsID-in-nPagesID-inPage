@@ -1,0 +1,129 @@
+//==========================//==========================//==========================//==========================//==========================
+//MainScreen.vue
+//==========================//==========================//==========================//==========================//==========================
+<template>
+  <div class="main">
+    <Screen
+        v-for="id in screenIds"
+        :key="id"
+        :screenId="id"
+    />
+  </div>
+</template>
+
+<script>
+import Screen from "./Screen.vue";
+
+export default {
+  name: "MainScreen",
+  components: {
+    Screen,
+  },
+  data() {
+    return {
+      screenIds: Array.from({ length: 100 }, (_, i) => `Screen-${i + 1}`), // 100개의 화면 ID 생성
+    };
+  },
+};
+</script>
+
+<style scoped>
+.main {
+  display: flex;
+  flex-wrap: wrap;
+}
+</style>
+//==========================//==========================//==========================//==========================//==========================
+//Screen.vue
+//==========================//==========================//==========================//==========================//==========================
+<template>
+  <div class="screen">
+    <h2>화면 {{ screenId }}</h2>
+    <DynamicButton
+        v-for="type in buttonTypes"
+        :key="type"
+        :screenId="screenId"
+        :buttonType="type"
+        @click="handleButtonClick"
+    />
+  </div>
+</template>
+
+<script>
+import DynamicButton from "./DynamicButton.vue";
+
+export default {
+  name: "Screen",
+  components: {
+    DynamicButton,
+  },
+  props: {
+    screenId: {
+      type: String,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      buttonTypes: ["조회", "등록", "수정", "상세"], // 버튼 타입 리스트
+    };
+  },
+  methods: {
+    handleButtonClick(id) {
+      console.log(`${id} 버튼이 클릭되었습니다.`);
+    },
+  },
+};
+</script>
+
+<style scoped>
+.screen {
+  border: 1px solid #ddd;
+  margin: 10px;
+  padding: 10px;
+}
+</style>
+
+//==========================//==========================//==========================//==========================//==========================
+//DynamicButton.vue
+//==========================//==========================//==========================//==========================//==========================
+<template>
+  <button :id="computedId" @click="handleClick">
+    {{ label }}
+  </button>
+</template>
+
+<script>
+export default {
+  name: "DynamicButton",
+  props: {
+    screenId: {
+      type: String,
+      required: true, // 화면 ID
+    },
+    buttonType: {
+      type: String,
+      required: true, // 버튼 타입 ('조회', '등록', '수정', '상세')
+    },
+  },
+  computed: {
+    computedId() {
+      // 규칙적인 ID 생성 로직
+      return `${this.screenId}-${this.buttonType}`;
+    },
+  },
+  methods: {
+    handleClick() {
+      this.$emit("click", this.computedId);
+    },
+  },
+};
+</script>
+
+<style scoped>
+button {
+  margin: 5px;
+  padding: 10px;
+  cursor: pointer;
+}
+</style>
